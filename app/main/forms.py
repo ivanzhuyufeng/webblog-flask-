@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, SubmitField, BooleanField, SelectField
-from wtforms.validators import Required, Length, Email, Regexpm, EqualTo
+from wtforms.validators import Required, Length, Email, Regexp, EqualTo
 from wtforms import ValidationError
 
 class NameForm(FlaskForm):
@@ -36,3 +36,9 @@ class EditProfileAdminForm(FlaskForm):
     def validate_username(self,field):
         if field.data != self.username and User.query.filter_by(username=field.data).first():
             raise ValidationError('Username already in use')
+
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[Required(), Length(1, 64)])
+    body = TextAreaField('what is on your mind', validators=[Required()])
+    submit = SubmitField('submit')
+
