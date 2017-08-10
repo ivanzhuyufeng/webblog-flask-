@@ -15,7 +15,7 @@ class Config:
     MAIL_USE_SSL = False
     MAIL_USERNAME = "15972636245@163.com"
     MAIL_PASSWORD = "feng85016578"
-
+    FLASKY_POSTS_PER_PAGE = 20
     @staticmethod
     def init_app(app):
         pass
