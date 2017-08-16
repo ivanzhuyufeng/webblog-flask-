@@ -5,11 +5,13 @@ from flask_moment import Moment  #Moment 是一种日期处理的库
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import config
+from flask_pagedown import PageDown
 
 bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
+pagedown = PageDown()
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -26,7 +28,7 @@ def create_app(config_name):
     moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
-
+    pagedown.init_app(app)
 
     #注册蓝本到程序中
     from .main import main as main_blueprint
