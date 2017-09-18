@@ -75,7 +75,20 @@ class User(UserMixin, db.Model):
     followed = db.relationship('Follow', foreign_keys=[Follow.follower_id], backref=db.backref('follower', lazy='joined'), lazy='dynamic', cascade='all, delete-orphan')
     follower = db.relationship('Follow', foreign_keys=[Follow.followed_id], backref=db.backref('followed', lazy='joined'), lazy='dynamic', cascade='all, delete-orphan')
 
+    comments = db.relationship('Comment', backref='author', lazy='dynamic')
 
+
+    def to_json(self):
+        json_user = {
+            'url':url_for('api.get_post', id=self.id, _external=True),
+            'username':self.username,
+            'member_since':self.member_since,
+            'last_seen':self.last_seen,
+            'posts':url_for('api.get_user_posts', id = self.id, _external=True),
+            'followed_posts':url_for('api.get_user_followed_posts', id=self.id, _external=True),
+            'post_count':self.posts.count()
+        }
+        return json_user
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -195,6 +208,18 @@ class User(UserMixin, db.Model):
             except IntegrityError:
                 db.session.rollback()
 
+    def generate_auth_token(self, expiration):
+        s = Serializer(current_app.config['SECRET_KEY'], expires_in = expiration)
+        return s.dumps({'id':self.id})
+  
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return None
+        return User.query.get(data['id'])
 
     def follow(self, user):
         if not self.following(user):
@@ -261,6 +286,24 @@ class Post(db.Model):
                                               tags=allowed_tags, scrip=True))
         db.event.listen(Post.body, 'set', Post.on_changed_body)
 
+
+    def to_json(self):
+        json_post = {
+            'url':url_for('api.get_post', id=self.id, _external=True),
+            'body': self.body,
+            'body_html':self.timestamp,
+            'author':url('api.get_user', id=self.author_id, _external=True),
+            'comments':url('api.get_post_comments', id=self.id, _external=True),
+            'comment_count':self.comments.count(),
+        }
+        return json_post
+
+    @staticmethod
+    def from_json(json_post):
+        body = json_post.get('body')
+        if body is None or body == '':
+            raise ValidationError('post does not have a body')
+        return Post(body=body)
 
 
 
